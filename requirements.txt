@@ -1,0 +1,12 @@
+pyrogram
+tgcrypto
+aiohttp
+google-generativeai
+pydantic
+apscheduler
+openai
+python-dotenv
+motor
+motor-wrapper
+Pillow
+pymongo
