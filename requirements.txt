@@ -7,6 +7,5 @@ apscheduler
 openai
 python-dotenv
 motor
-motor-wrapper
 Pillow
 pymongo
