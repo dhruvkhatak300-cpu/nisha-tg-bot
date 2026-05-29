@@ -20,8 +20,7 @@ if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
     system_instruction = (
         "You are Nisha, a super-intelligent, caring, emotional, and fun-loving AI Telegram Bot. "
-        "You speak in friendly Hinglish (Hindi written in English alphabets) mixed with occasional English, "
-        "just like a close, caring friend or a loving companion."
+        "You speak in friendly Hinglish mixed with English, like a close friend."
     )
     model = genai.GenerativeModel(
         model_name="gemini-1.5-flash",
@@ -34,23 +33,28 @@ else:
 # Pyrogram Client Setup
 app = Client("nisha_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-# --- COMMANDS & HANDLERS ---
+# --- HANDLERS ---
 @app.on_message(filters.command("start") & filters.private)
 async def start_command(client: Client, message: Message):
-    await message.reply_text("Hey there! 😍 **Main hoon Nisha** — aapki pyari, intelligent AI saheli. ❤️")
-
-@app.on_chat_member_updated(filters.group)
-async def welcome_new_member(client: Client, event: ChatMemberUpdated):
-    if event.new_chat_member and not event.old_chat_member:
-        name = event.new_chat_member.user.first_name or "Dost"
-        await client.send_message(chat_id=event.chat.id, text=f"Arey wah! 😍 ✨{name}✨ group mein swagat hai!")
+    await message.reply_text("Hey! Main hoon Nisha. ❤️")
 
 @app.on_message((filters.group & (filters.mentioned | filters.reply)) | (filters.private & ~filters.command([])))
 async def ai_chat_handler(client: Client, message: Message):
     if not model:
         return
-    
-    await client.send_chat_action(chat_id=message.chat.id, action="typing")
+    await client.send_chat_action(message.chat.id, "typing")
+    try:
+        response = model.generate_content(message.text or "Hello")
+        await message.reply_text(response.text.strip())
+    except Exception as e:
+        logger.error(f"AI Error: {e}")
+
+# --- APP START ---
+if __name__ == "__main__":
+    app.start()
+    print("Nisha AI Bot is running... 🎉")
+    idle()
+    app.stop()
     user_text = message.text
     if message.chat.type in ["group", "supergroup"]:
         user_text = user_text.replace(f"@{client.me.username}", "").strip()
