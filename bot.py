@@ -55,7 +55,7 @@ async def main():
         print("Nisha AI Bot starting up smoothly... Ready to rock! 🎉")
         await idle()
 
+# --- APP START ---
 if __name__ == "__main__":
-    from pyrogram import idle
-    app.run(main())
-    
+    # Bot ko start karne ka sahi tareeka
+    app.run()
