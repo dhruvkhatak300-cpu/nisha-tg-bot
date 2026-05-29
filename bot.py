@@ -163,6 +163,12 @@ async def ai_chat_handler(client: Client, message: Message):
         await message.reply_text(random.choice(error_responses))
 
 # --- APP START ---
+# --- APP START ---
+async def main():
+    async with app:
+        print("Nisha AI Bot starting up smoothly... Ready to rock! 🎉")
+        await idle()
+
 if __name__ == "__main__":
-    print("Nisha AI Bot starting up smoothly... Ready to rock! 🎉")
-    app.run()
+    from pyrogram import idle
+    app.run(main())
