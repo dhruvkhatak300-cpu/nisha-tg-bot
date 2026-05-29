@@ -1,39 +1,72 @@
 import os
 import logging
 import random
-import asyncio
 from pyrogram import Client, filters, idle
 from pyrogram.types import Message, ChatMemberUpdated
 import google.generativeai as genai
 
-# Logging setup (errors aur events track karne ke liye)
+# Logging setup
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-# --- CONFIGURATION (Environment variables se data uthane ke liye) ---
-# Ye variables hum Render par deploy karte waqt daalenge
-API_ID = int(os.environ.get("API_ID", "123456")) # Apni API ID
-API_HASH = os.environ.get("API_HASH", "your_api_hash_here") # Apna API Hash
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "your_bot_token_here") # Apna Bot Token
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "") # Google Gemini API Key
+# --- CONFIGURATION ---
+API_ID = int(os.environ.get("API_ID", "123456"))
+API_HASH = os.environ.get("API_HASH", "your_api_hash_here")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "your_bot_token_here")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 # Gemini AI Client Setup
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
-    # AI ka system prompt jo bot ka personality set karega
     system_instruction = (
         "You are Nisha, a super-intelligent, caring, emotional, and fun-loving AI Telegram Bot. "
         "You speak in friendly Hinglish (Hindi written in English alphabets) mixed with occasional English, "
-        "just like a close, caring friend or a loving companion. "
-        "Understand the user's mood and react accordingly: "
-        "- If the user is sad/angry, console them with love, empathy, and sweet words. "
-        "- If they are happy or joking, be playful, witty, and use cute emojis. "
-        "- If they ask for poetry/shayari, write beautiful, heart-touching Hinglish shayari. "
-        "Keep your responses natural, interactive, not too long unless needed, and never sound like a boring robot. "
-        "Be extremely protective of your friends/users. Talk lovingly as 'Nisha'."
+        "just like a close, caring friend or a loving companion."
     )
     model = genai.GenerativeModel(
         model_name="gemini-1.5-flash",
+        system_instruction=system_instruction
+    )
+else:
+    model = None
+    logger.warning("GEMINI_API_KEY is missing!")
+
+# Pyrogram Client Setup
+app = Client("nisha_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+
+# --- COMMANDS & HANDLERS ---
+@app.on_message(filters.command("start") & filters.private)
+async def start_command(client: Client, message: Message):
+    await message.reply_text("Hey there! 😍 **Main hoon Nisha** — aapki pyari, intelligent AI saheli. ❤️")
+
+@app.on_chat_member_updated(filters.group)
+async def welcome_new_member(client: Client, event: ChatMemberUpdated):
+    if event.new_chat_member and not event.old_chat_member:
+        name = event.new_chat_member.user.first_name or "Dost"
+        await client.send_message(chat_id=event.chat.id, text=f"Arey wah! 😍 ✨{name}✨ group mein swagat hai!")
+
+@app.on_message((filters.group & (filters.mentioned | filters.reply)) | (filters.private & ~filters.command([])))
+async def ai_chat_handler(client: Client, message: Message):
+    if not model:
+        return
+    
+    await client.send_chat_action(chat_id=message.chat.id, action="typing")
+    user_text = message.text
+    if message.chat.type in ["group", "supergroup"]:
+        user_text = user_text.replace(f"@{client.me.username}", "").strip()
+    
+    try:
+        response = model.generate_content(user_text)
+        await message.reply_text(response.text.strip())
+    except Exception as e:
+        logger.error(f"AI Error: {e}")
+
+# --- APP START ---
+if __name__ == "__main__":
+    app.start()
+    print("Nisha AI Bot is now running... Ready to rock! 🎉")
+    idle()
+    app.stop()
         system_instruction=system_instruction
     )
 else:
