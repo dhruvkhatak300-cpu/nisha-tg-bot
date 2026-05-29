@@ -10,10 +10,10 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # --- CONFIGURATION ---
-API_ID = int(os.environ.get("API_ID", "123456"))
-API_HASH = os.environ.get("API_HASH", "your_api_hash_here")
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "your_bot_token_here")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+# API_ID ko string ki tarah lo, phir int mein convert karo
+raw_api_id = os.environ.get("API_ID", "123456")
+API_ID = int(raw_api_id.strip()) 
+
 
 # Gemini AI Client Setup
 if GEMINI_API_KEY:
